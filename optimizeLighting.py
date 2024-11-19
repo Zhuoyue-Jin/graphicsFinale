@@ -37,9 +37,8 @@ def compute_loss(rendered_image, ground_truth_image):
     """
     import kornia
     loss = kornia.losses.ssim_loss(torch.Tensor(rendered_image).reshape(1,3,512,512),torch.Tensor(ground_truth_image).reshape(1,3,512,512),window_size=5)
-    return loss.detach().numpy().astype('float64')
-    # loss = np.mean((rendered_image - ground_truth_image) ** 2)
-    # return loss
+    return loss.detach().numpy().astype('float64') + np.mean((rendered_image - ground_truth_image) ** 2)
+
 
 
 def objective_function(light_positions, iteration_counter, iteration_images_dir, ground_truth_array, json_file, modified_json_file, executable):
@@ -72,8 +71,9 @@ def objective_function(light_positions, iteration_counter, iteration_images_dir,
     # Compute and return the loss
     PSNR = peak_signal_noise_ratio(ground_truth_array,rendered_image)
     loss = compute_loss(rendered_image, ground_truth_array)
-    if(iteration%10==0):
-        print(f"Iteration {iteration}, Loss: {loss}, Light Position: {light_positions}, PSNR : {PSNR}")
+
+
+    print(f"Iteration {iteration}, Loss: {loss}, Light Position: {light_positions}, PSNR : {PSNR}")
 
     return loss
 
@@ -118,14 +118,14 @@ def optimize_light_positions(json_file, output_file, ground_truth_image_path):
         objective_function,
         initial_guess,
         args=(iteration_counter, iteration_images_dir, ground_truth_array, json_file, modified_json_file, executable),
-        method= 'Powell',#'Nelder-Mead',
+        method= 'Nelder-Mead',
         bounds=bounds,
-        options={'maxiter': 500, 'disp': True}
+        options={'maxiter': 50, 'disp': True}
     )
 
     # Get the optimized light positions
     optimized_light_positions = np.reshape(result.x, (-1, 3))
-    print("Optimized Light Positions:", optimized_light_positions)
+    #print("Optimized Light Positions:", optimized_light_positions)
 
     # Render the final image with optimized light positions
     final_output_file = output_file  # Use the original output file name
@@ -133,7 +133,7 @@ def optimize_light_positions(json_file, output_file, ground_truth_image_path):
     create_ini_file(modified_json_file, final_output_file)
     run_renderer(executable, "default.ini")
 
-    print(f"Optimization completed. Final image saved to '{final_output_file}'.")
+    # print(f"Optimization completed. Final image saved to '{final_output_file}'.")
 
 
 if __name__ == "__main__":

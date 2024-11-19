@@ -30,7 +30,7 @@ depthoffield = false
 [Settings]
 maximum-recursive-depth = 4
 """)
-    print(f"INI file '{ini_file}' created with scene '{json_file}' and output '{output_file}'.")
+    #print(f"INI file '{ini_file}' created with scene '{json_file}' and output '{output_file}'.")
     return ini_file
 
 
@@ -76,5 +76,5 @@ def insert_lights_into_json(json_file, light_positions, modified_json_file):
     with open(modified_json_file, 'w') as f:
         json.dump(data, f, indent=2)
     
-    print(f"Modified JSON file '{modified_json_file}' created with new lights.")
+    #print(f"Modified JSON file '{modified_json_file}' created with new lights.")
     return modified_json_file
