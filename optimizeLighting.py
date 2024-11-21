@@ -3,10 +3,9 @@ import subprocess
 from PIL import Image
 import numpy as np
 from scipy.optimize import minimize
-from helper import insert_lights_into_json,create_ini_file
+from helper import insert_lights_into_json,create_ini_file,insert_surface_translation
 from skimage.metrics import peak_signal_noise_ratio
 import torch
-
 
 
 def run_renderer(executable, ini_file):
@@ -37,7 +36,9 @@ def compute_loss(rendered_image, ground_truth_image):
     """
     import kornia
     loss = kornia.losses.ssim_loss(torch.Tensor(rendered_image).reshape(1,3,512,512),torch.Tensor(ground_truth_image).reshape(1,3,512,512),window_size=5)
+    
     return loss.detach().numpy().astype('float64') + np.mean((rendered_image - ground_truth_image) ** 2)
+
 
 
 
@@ -76,6 +77,104 @@ def objective_function(light_positions, iteration_counter, iteration_images_dir,
     print(f"Iteration {iteration}, Loss: {loss}, Light Position: {light_positions}, PSNR : {PSNR}")
 
     return loss
+
+def objective_function_translation(object_positions, iteration_counter, iteration_images_dir, ground_truth_array,  modified_json_file, executable):
+    iteration_counter[0] += 1
+    iteration = iteration_counter[0]
+
+    # Ensure light_positions is in correct shape
+    positions = np.reshape(object_positions, (-1)).tolist()
+
+    # Update the JSON file with new light positions
+    insert_surface_translation(positions, modified_json_file)
+
+    # Update the output file name to include iteration number
+    current_output_file = os.path.join(iteration_images_dir, f"render_{iteration:03d}.png")
+    create_ini_file(modified_json_file, current_output_file)
+
+    # Run the renderer
+    run_renderer(executable, "default.ini")
+
+    # Load the rendered image
+    rendered_image = load_rendered_image(current_output_file)
+
+    
+    # Compute and return the loss
+    PSNR = peak_signal_noise_ratio(ground_truth_array,rendered_image)
+    loss = compute_loss(rendered_image, ground_truth_array)
+
+    print(f"Iteration {iteration}, Loss: {loss}, PSNR : {PSNR}")
+
+    return loss
+
+
+
+def optimize_translation(output_file,ground_truth_image_path):
+    """
+    Objective function for optimization ( translation ). Computes the loss based on the difference
+    between the rendered image and the ground truth image.
+    
+    """
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    executable = os.path.join(script_dir, "projects_ray")
+    modified_json_file = "modified_scene.json"
+
+    # Load the ground truth image
+    ground_truth_image = Image.open(ground_truth_image_path).convert('RGB')
+    ground_truth_image = ground_truth_image.resize((512, 512))  # Ensure same size as rendered image
+    ground_truth_array = np.array(ground_truth_image) / 255.0
+
+    # Create a directory to save iteration images
+    iteration_images_dir = "iteration_images"
+    os.makedirs(iteration_images_dir, exist_ok=True)
+
+    # Counter for iterations
+    iteration_counter = [0]  # Use a mutable type to modify inside the nested function
+
+    # Initial guess for light positions
+
+    random_array = np.array([[np.random.uniform(-1, 1),  # For the range [0, 5]
+                          np.random.uniform(-1, 1),  # For the range [0, 5]
+                          np.random.uniform(-1, 1),
+                          np.random.uniform(1, 1),
+                          np.random.uniform(1, 1),
+                          np.random.uniform(1, 1),
+                          np.random.uniform(1, 1),
+                          np.random.uniform(1, 1),
+                          np.random.uniform(1, 1),
+                          np.random.uniform(1, 1),
+                          np.random.uniform(1, 1),
+                          np.random.uniform(1, 1),]])  # For the range [-5, 0]
+
+
+    initial_light_positions = random_array  # Adjust as needed
+    initial_guess = initial_light_positions.flatten()
+
+    # Bounds for light positions
+    bounds = [(-1, 1), (0, 0), (-1, 1)] * (len(initial_guess) // 3)
+
+    # Run the optimization 
+    result = minimize(
+        objective_function,
+        initial_guess,
+        args=(iteration_counter, iteration_images_dir, ground_truth_array, modified_json_file, executable),
+        method= 'Nelder-Mead',
+        bounds=bounds,
+        options={'maxiter': 50, 'disp': True}
+    )
+
+    # Get the optimized light positions
+    optimized_light_positions = np.reshape(result.x, (-1, 3))
+    #print("Optimized Light Positions:", optimized_light_positions)
+
+    # Render the final image with optimized light positions
+    final_output_file = output_file  # Use the original output file name
+    insert_lights_into_json(json_file, optimized_light_positions.tolist(), modified_json_file)
+    create_ini_file(modified_json_file, final_output_file)
+    run_renderer(executable, "default.ini")
+    
+
+    pass
 
 
 def optimize_light_positions(json_file, output_file, ground_truth_image_path):
@@ -143,6 +242,7 @@ if __name__ == "__main__":
     parser.add_argument("json_file", help="Path to the input JSON file.")
     parser.add_argument("output_file", help="Name of the output PNG file to create.")
     parser.add_argument("ground_truth_image", help="Path to the ground truth image.")
+    parser.add_argument("translation",default=0, help="Path to the ground truth image.")
     args = parser.parse_args()
 
     # Ensure the JSON file exists
@@ -161,7 +261,10 @@ if __name__ == "__main__":
         output_file += ".png"
 
     # Run the optimization process
-    optimize_light_positions(args.json_file, output_file, args.ground_truth_image)
+    if(args.translation):
+        optimize_translation(output_file,args.ground_truth_image)
+    else:
+        optimize_light_positions(args.json_file, output_file, args.ground_truth_image)
 
 
 

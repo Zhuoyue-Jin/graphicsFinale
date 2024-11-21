@@ -8,9 +8,9 @@
   },
   "cameraData": {
     "position": [
-      -6.0,
-      4.0,
-      4.0
+      -5.0,
+      1.0,
+      0.0
     ],
     "up": [
       0.0,
@@ -22,41 +22,62 @@
       0,
       0
     ],
-    "heightAngle": 30.0
+    "heightAngle": 50.0
   },
   "groups": [
     {
-      "translate": [
-        0,
-        3,
-        0
+      "lights": [
+        {
+          "type": "directional",
+          "color": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "direction": [
+            0.0,
+            -1.0,
+            0.0
+          ]
+        }
+      ]
+    },
+    {
+      "lights": [
+        {
+          "type": "directional",
+          "color": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "direction": [
+            1.0,
+            0.0,
+            0.0
+          ]
+        }
+      ]
+    },
+    {
+      "lights": [
+        {
+          "type": "directional",
+          "color": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "direction": [
+            0.0,
+            0.0,
+            1.0
+          ]
+        }
       ]
     },
     {
       "groups": [
-        {
-          "translate": [
-            0.65,
-            0.0,
-            -0.65
-          ],
-          "primitives": [
-            {
-              "type": "sphere",
-              "diffuse": [
-                0.6,
-                0.8,
-                0.6
-              ],
-              "specular": [
-                1.0,
-                1.0,
-                1.0
-              ],
-              "shininess": 15.0
-            }
-          ]
-        },
         {
           "translate": [
             0.0,
@@ -78,27 +99,141 @@
               ]
             }
           ]
-        }
-      ]
-    },
-    {
-      "translate": [
-        0.001169403276901202,
-        2.999415317640284,
-        0.0
-      ],
-      "lights": [
+        },
         {
-          "type": "point",
-          "color": [
-            1.0,
-            1.0,
-            1.0
+          "translate": [
+            0.0,
+            0.0,
+            5.0
           ],
-          "attenuationCoeff": [
-            0.8,
-            0.2,
+          "scale": [
+            6.0,
+            6.0,
+            6.0
+          ],
+          "primitives": [
+            {
+              "type": "cube",
+              "diffuse": [
+                1.0,
+                0.0,
+                0.8
+              ]
+            }
+          ]
+        },
+        {
+          "translate": [
+            5.0,
+            0.0,
             0.0
+          ],
+          "scale": [
+            6.0,
+            6.0,
+            6.0
+          ],
+          "primitives": [
+            {
+              "type": "cube",
+              "diffuse": [
+                0.0,
+                1.0,
+                0.8
+              ]
+            }
+          ]
+        },
+        {
+          "translate": [
+            0.97911885569822,
+            4.929491983036159,
+            4.066076488190992
+          ],
+          "primitives": [
+            {
+              "type": "cylinder",
+              "diffuse": [
+                0.8,
+                0.6,
+                0.6
+              ],
+              "specular": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "shininess": 15.0
+            }
+          ]
+        },
+        {
+          "translate": [
+            0.24960130030924765,
+            3.503864639264762,
+            2.5030712277500453
+          ],
+          "primitives": [
+            {
+              "type": "cone",
+              "diffuse": [
+                0.6,
+                0.6,
+                0.8
+              ],
+              "specular": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "shininess": 15.0
+            }
+          ]
+        },
+        {
+          "translate": [
+            0.9015797540439008,
+            4.449506442216226,
+            4.174949381111384
+          ],
+          "primitives": [
+            {
+              "type": "sphere",
+              "diffuse": [
+                0.6,
+                0.8,
+                0.6
+              ],
+              "specular": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "shininess": 15.0
+            }
+          ]
+        },
+        {
+          "translate": [
+            2.007769722363285,
+            2.8220753680034734,
+            3.856958085616548
+          ],
+          "primitives": [
+            {
+              "type": "cube",
+              "diffuse": [
+                0.7,
+                0.7,
+                0.7
+              ],
+              "specular": [
+                1.0,
+                1.0,
+                1.0
+              ],
+              "shininess": 15.0
+            }
           ]
         }
       ]
