@@ -1,0 +1,2 @@
+set(__QT_DEPLOY_TARGET_CLOUDS_FILE /Users/aman/Developer/graphicsFinale/build/build-graphicsFinale-Qt_6_8_0_for_macOS-Release/CLOUDS)
+set(__QT_DEPLOY_TARGET_CLOUDS_TYPE EXECUTABLE)

@@ -1,0 +1,15 @@
+/Users/aman/Developer/graphicsFinale/build/build-graphicsFinale-Qt_6_8_0_for_macOS-Release/CMakeFiles/CLOUDS.dir
+/Users/aman/Developer/graphicsFinale/build/build-graphicsFinale-Qt_6_8_0_for_macOS-Release/CMakeFiles/edit_cache.dir
+/Users/aman/Developer/graphicsFinale/build/build-graphicsFinale-Qt_6_8_0_for_macOS-Release/CMakeFiles/rebuild_cache.dir
+/Users/aman/Developer/graphicsFinale/build/build-graphicsFinale-Qt_6_8_0_for_macOS-Release/CMakeFiles/list_install_components.dir
+/Users/aman/Developer/graphicsFinale/build/build-graphicsFinale-Qt_6_8_0_for_macOS-Release/CMakeFiles/install.dir
+/Users/aman/Developer/graphicsFinale/build/build-graphicsFinale-Qt_6_8_0_for_macOS-Release/CMakeFiles/install/local.dir
+/Users/aman/Developer/graphicsFinale/build/build-graphicsFinale-Qt_6_8_0_for_macOS-Release/CMakeFiles/install/strip.dir
+/Users/aman/Developer/graphicsFinale/build/build-graphicsFinale-Qt_6_8_0_for_macOS-Release/CMakeFiles/CLOUDS_autogen_timestamp_deps.dir
+/Users/aman/Developer/graphicsFinale/build/build-graphicsFinale-Qt_6_8_0_for_macOS-Release/CMakeFiles/CLOUDS_autogen.dir
+/Users/aman/Developer/graphicsFinale/build/build-graphicsFinale-Qt_6_8_0_for_macOS-Release/glm/CMakeFiles/edit_cache.dir
+/Users/aman/Developer/graphicsFinale/build/build-graphicsFinale-Qt_6_8_0_for_macOS-Release/glm/CMakeFiles/rebuild_cache.dir
+/Users/aman/Developer/graphicsFinale/build/build-graphicsFinale-Qt_6_8_0_for_macOS-Release/glm/CMakeFiles/list_install_components.dir
+/Users/aman/Developer/graphicsFinale/build/build-graphicsFinale-Qt_6_8_0_for_macOS-Release/glm/CMakeFiles/install.dir
+/Users/aman/Developer/graphicsFinale/build/build-graphicsFinale-Qt_6_8_0_for_macOS-Release/glm/CMakeFiles/install/local.dir
+/Users/aman/Developer/graphicsFinale/build/build-graphicsFinale-Qt_6_8_0_for_macOS-Release/glm/CMakeFiles/install/strip.dir
