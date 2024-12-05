@@ -72,8 +72,8 @@ qt6_add_resources(${PROJECT_NAME} "Resources"
     PREFIX
         "/"
     FILES
-        resources/shaders/grayscale.frag
-        resources/shaders/quad.vert
+        resources/shaders/clouds.frag
+        resources/shaders/clouds.vert
 )
 
 # GLEW: this provides support for Windows (including 64-bit)

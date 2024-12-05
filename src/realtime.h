@@ -25,23 +25,21 @@ public:
     void saveViewportImage(std::string filePath);
     void clearBuffers();
 
-
-
-
     GLuint m_shader;
 
-
-
+    // Camera parameters
+    glm::vec4 pos = glm::vec4(0.f,0.f,0.f,1.f);
+    glm::vec4 look = glm::vec4(0.f,0.f,-1.f,0.f);
+    glm::vec4 up = glm::vec4(0.f,1.f,0.f,0.f);
     glm::mat4 m_model = glm::mat4(1);
     glm::mat4 m_view  = glm::mat4(1);
     glm::mat4 m_proj  = glm::mat4(1);
 
-
+    int width;
+    int height;
 
     int m_screen_width;
     int m_screen_height;
-
-
 
     GLuint VAO;
     GLuint VBO;

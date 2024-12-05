@@ -10,6 +10,8 @@
 #include "shaderloader.h"
 #include <glm/gtc/type_ptr.hpp>
 
+#include "src/utils/camera.h"
+
 #include "debug.h"
 
 
@@ -54,15 +56,12 @@ void Realtime::finish() {
 
 void Realtime::initializeGL() {
     m_devicePixelRatio = this->devicePixelRatio();
-
-    //m_defaultFBO = 2;
     m_screen_width = size().width() * m_devicePixelRatio;
     m_screen_height = size().height() * m_devicePixelRatio;
-    // m_fbo_width = m_screen_width;
-    // m_fbo_height = m_screen_height;
-
     m_timer = startTimer(1000/60);
     m_elapsedTimer.start();
+    width = size().width();
+    height = size().height();
 
     // Initializing GL.
     // GLEW (GL Extension Wrangler) provides access to OpenGL functions.
@@ -78,45 +77,49 @@ void Realtime::initializeGL() {
     glEnable(GL_CULL_FACE);
     glViewport(0, 0, size().width() * m_devicePixelRatio, size().height() * m_devicePixelRatio);
 
-    shaderProgram = ShaderLoader::createShaderProgram(":/resources/shaders/quad.vert", ":/resources/shaders/grayscale.frag");
 
-    float vertices[] = {
-        // Positions
-        -1.0f, -1.0f, 0.0f,
-        1.0f, -1.0f, 0.0f,
-        1.0f,  1.0f, 0.0f,
-        -1.0f,  1.0f, 0.0f
-    };
+    calMatrices(width,height, m_view, m_proj,pos,look,up);
 
-    unsigned int indices[] = {
-        0, 1, 2,
-        0, 2, 3
-    };
+    // Sample Cloud Code
+    //shaderProgram = ShaderLoader::createShaderProgram(":/resources/shaders/clouds.vert", ":/resources/shaders/clouds.frag");
 
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
+    // float vertices[] = {
+    //     // Positions
+    //     -1.0f, -1.0f, 0.0f,
+    //     1.0f, -1.0f, 0.0f,
+    //     1.0f,  1.0f, 0.0f,
+    //     -1.0f,  1.0f, 0.0f
+    // };
 
-    glBindVertexArray(VAO);
+    // unsigned int indices[] = {
+    //     0, 1, 2,
+    //     0, 2, 3
+    // };
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    // glGenVertexArrays(1, &VAO);
+    // glGenBuffers(1, &VBO);
+    // glGenBuffers(1, &EBO);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    // glBindVertexArray(VAO);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
+    // glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    // glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    // Set up uniforms
-    glUseProgram(shaderProgram);
-    resolutionLoc = glGetUniformLocation(shaderProgram, "iResolution");
-    timeLoc = glGetUniformLocation(shaderProgram, "iTime");
-    glUniform2f(resolutionLoc, 800.0f, 600.0f);
-    glUseProgram(0);
+    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    // glEnableVertexAttribArray(0);
+
+    // glBindBuffer(GL_ARRAY_BUFFER, 0);
+    // glBindVertexArray(0);
+
+    // // Set up uniforms
+    // glUseProgram(shaderProgram);
+    // resolutionLoc = glGetUniformLocation(shaderProgram, "iResolution");
+    // timeLoc = glGetUniformLocation(shaderProgram, "iTime");
+    // glUniform2f(resolutionLoc, 800.0f, 600.0f);
+    // glUseProgram(0);
 
 }
 
@@ -124,18 +127,17 @@ void Realtime::initializeGL() {
 
 void Realtime::paintGL()
 {
-    glUseProgram(shaderProgram);
-    time += 0.01f;
-    glClear(GL_COLOR_BUFFER_BIT);
+    // glUseProgram(shaderProgram);
+    // time += 0.01f;
+    // glClear(GL_COLOR_BUFFER_BIT);
 
+    // // Set uniform values
+    // glUniform1f(timeLoc,time);
 
-    // Set uniform values
-    glUniform1f(timeLoc,time);
-
-    // Render the quad
-    glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    glUseProgram(0);
+    // // Render the quad
+    // glBindVertexArray(VAO);
+    // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    // glUseProgram(0);
 }
 
 void Realtime::resizeGL(int w, int h) {
@@ -157,8 +159,6 @@ void Realtime::clearBuffers()
 void Realtime::sceneChanged()
 {
     //clearBuffers();
-
-
     update();
 }
 
@@ -201,7 +201,7 @@ void Realtime::mouseMoveEvent(QMouseEvent *event) {
         m_prev_mouse_pos = glm::vec2(posX, posY);
 
         // Use deltaX and deltaY here to rotate
-        // calcMatrices(data,m_view,m_proj,width(),height(),deltaX,deltaY);
+        calcMatrices(width,height,m_view,m_proj,deltaX,deltaY,pos,look,up);
 
         update(); // asks for a PaintGL() call to occur
     }
@@ -213,7 +213,7 @@ void Realtime::timerEvent(QTimerEvent *event) {
     m_elapsedTimer.restart();
 
     // Use deltaTime and m_keyMap here to move around
-    //calcMatrices(data,m_view,m_proj,width(),height(),m_keyMap,deltaTime);
+    calcMatrices(width,height,m_view,m_proj,m_keyMap,deltaTime,pos,look,up);
 
     update(); // asks for a PaintGL() call to occur
 }
