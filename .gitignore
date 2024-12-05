@@ -3,3 +3,4 @@ iteration_images/
 .DS_Store
 CMakeLists.txt.user
 build/
+src/.DS_Store

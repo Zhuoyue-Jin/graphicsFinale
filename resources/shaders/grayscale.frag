@@ -1,55 +1,121 @@
 #version 330 core
 
-// Input UV coordinates
-in vec2 fragTexCoord;
+const float cloudscale = 1.1;
+const float speed = 0.03;
+const float clouddark = 0.5;
+const float cloudlight = 0.3;
+const float cloudcover = 0.2;
+const float cloudalpha = 8.0;
+const float skytint = 0.5;
+const vec3 skycolour1 = vec3(0.2, 0.4, 0.6);
+const vec3 skycolour2 = vec3(0.4, 0.7, 1.0);
 
-// Sampler for the texture
-uniform sampler2D txture;
+uniform vec2 iResolution; // Screen resolution
+uniform float iTime;
 
-uniform bool processing;
-uniform bool blur;
+out vec4 fcolor;
 
-// Texture size (to compute offsets for neighboring pixels)
-uniform vec2 texSize;
+const mat2 m = mat2( 1.6,  1.2, -1.2,  1.6 );
 
+vec2 hash( vec2 p ) {
+    p = vec2(dot(p,vec2(127.1,311.7)), dot(p,vec2(269.5,183.3)));
+    return -1.0 + 2.0*fract(sin(p)*43758.5453123);
+}
 
-out vec4 fragColor;
+float noise( in vec2 p ) {
+    const float K1 = 0.366025404; // (sqrt(3)-1)/2;
+    const float K2 = 0.211324865; // (3-sqrt(3))/6;
+    vec2 i = floor(p + (p.x+p.y)*K1);
+    vec2 a = p - i + (i.x+i.y)*K2;
+    vec2 o = (a.x > a.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+    vec2 b = a - o + K2;
+    vec2 c = a - 1.0 + 2.0*K2;
+    vec3 h = max(0.5 - vec3(dot(a,a), dot(b,b), dot(c,c)), 0.0);
+    vec3 n = h * h * h * h * vec3(dot(a, hash(i+0.0)), dot(b, hash(i+o)), dot(c, hash(i+1.0)));
+    return dot(n, vec3(70.0));
+}
 
-void main()
-{
-    vec4 texColor = texture(txture, fragTexCoord);
+float fbm(vec2 n) {
+    float total = 0.0, amplitude = 0.1;
+    for (int i = 0; i < 7; i++) {
+        total += noise(n) * amplitude;
+        n = m * n;
+        amplitude *= 0.4;
+    }
+    return total;
+}
 
-    if (blur) {
+void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+    vec2 p = fragCoord.xy / iResolution.xy;
+    vec2 uv = p * vec2(iResolution.x / iResolution.y, 1.0);
+    float time = iTime * speed;
+    float q = fbm(uv * cloudscale * 0.5);
 
-        float kernel[25] = float[25](
-            1.0/25, 1.0/25, 1.0/25, 1.0/25, 1.0/25,
-            1.0/25, 1.0/25, 1.0/25, 1.0/25, 1.0/25,
-            1.0/25, 1.0/25, 1.0/25, 1.0/25, 1.0/25,
-            1.0/25, 1.0/25, 1.0/25, 1.0/25, 1.0/25,
-            1.0/25, 1.0/25, 1.0/25, 1.0/25, 1.0/25
-        );
-
-
-        vec4 blurColor = vec4(0.0);
-
-        vec2 texelOffset = 1.0 / texSize;
-        for (int i = -2; i <= 2; ++i) {
-            for (int j = -2; j <= 2; ++j) {
-                vec2 offset = vec2(i, j) * texelOffset;
-                int kernelIndex = (i + 2) * 5 + (j + 2);
-                blurColor += texture(txture, fragTexCoord + offset) * kernel[kernelIndex];
-            }
-        }
-
-        texColor = blurColor;
+    // Ridged noise shape
+    float r = 0.0;
+    uv *= cloudscale;
+    uv -= q - time;
+    float weight = 0.8;
+    for (int i = 0; i < 8; i++) {
+        r += abs(weight * noise(uv));
+        uv = m * uv + time;
+        weight *= 0.7;
     }
 
-    if (processing) {
-
-        float luminance = dot(texColor.rgb, vec3(0.2126, 0.7152, 0.0722));
-        texColor = vec4(luminance, luminance, luminance, texColor.a);
+    // Noise shape
+    float f = 0.0;
+    uv = p * vec2(iResolution.x / iResolution.y, 1.0);
+    uv *= cloudscale;
+    uv -= q - time;
+    weight = 0.7;
+    for (int i = 0; i < 8; i++) {
+        f += weight * noise(uv);
+        uv = m * uv + time;
+        weight *= 0.6;
     }
 
+    f *= r + f;
 
-    fragColor = texColor;
+    // Noise color
+    float c = 0.0;
+    time = iTime * speed * 2.0;
+    uv = p * vec2(iResolution.x / iResolution.y, 1.0);
+    uv *= cloudscale * 2.0;
+    uv -= q - time;
+    weight = 0.4;
+    for (int i = 0; i < 7; i++) {
+        c += weight * noise(uv);
+        uv = m * uv + time;
+        weight *= 0.6;
+    }
+
+    // Noise ridge color
+    float c1 = 0.0;
+    time = iTime * speed * 3.0;
+    uv = p * vec2(iResolution.x / iResolution.y, 1.0);
+    uv *= cloudscale * 3.0;
+    uv -= q - time;
+    weight = 0.4;
+    for (int i = 0; i < 7; i++) {
+        c1 += abs(weight * noise(uv));
+        uv = m * uv + time;
+        weight *= 0.6;
+    }
+
+    c += c1;
+
+    vec3 skycolour = mix(skycolour2, skycolour1, p.y);
+    vec3 cloudcolour = vec3(1.1, 1.1, 0.9) * clamp((clouddark + cloudlight * c), 0.0, 1.0);
+
+    f = cloudcover + cloudalpha * f * r;
+
+    vec3 result = mix(skycolour, clamp(skytint * skycolour + cloudcolour, 0.0, 1.0), clamp(f + c, 0.0, 1.0));
+
+    fragColor = vec4(result, 1.0);
+}
+
+void main() {
+    vec4 fragColor;
+    mainImage(fragColor, gl_FragCoord.xy);
+    fcolor = fragColor;
 }

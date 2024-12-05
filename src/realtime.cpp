@@ -6,11 +6,10 @@
 #include <iostream>
 #include "settings.h"
 
-#include "utils/sceneparser.h"
-#include "utils/helper.h"
+
 #include "shaderloader.h"
 #include <glm/gtc/type_ptr.hpp>
-#include "utils/paint.h"
+
 #include "debug.h"
 
 
@@ -38,20 +37,15 @@ void Realtime::finish() {
     this->makeCurrent();
 
     // Delete shader program
-    if (m_shader) {
-        glDeleteProgram(m_shader);
-        m_shader = 0;
+    if (shaderProgram) {
+        glDeleteProgram(shaderProgram);
+        shaderProgram = 0;
     }
 
     clearBuffers();
-    glDeleteProgram(m_texture_shader);
-    glDeleteVertexArrays(1, &m_fullscreen_vao);
-    glDeleteBuffers(1, &m_fullscreen_vbo);
-
-    // Task 35: Delete OpenGL memory here
-    glDeleteTextures(1, &m_fbo_texture);
-    glDeleteRenderbuffers(1, &m_fbo_renderbuffer);
-    glDeleteFramebuffers(1, &m_fbo);
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
 
     doneCurrent();
     // Clear vertex collection
@@ -61,11 +55,11 @@ void Realtime::finish() {
 void Realtime::initializeGL() {
     m_devicePixelRatio = this->devicePixelRatio();
 
-    m_defaultFBO = 2;
+    //m_defaultFBO = 2;
     m_screen_width = size().width() * m_devicePixelRatio;
     m_screen_height = size().height() * m_devicePixelRatio;
-    m_fbo_width = m_screen_width;
-    m_fbo_height = m_screen_height;
+    // m_fbo_width = m_screen_width;
+    // m_fbo_height = m_screen_height;
 
     m_timer = startTimer(1000/60);
     m_elapsedTimer.start();
@@ -79,105 +73,78 @@ void Realtime::initializeGL() {
     }
     std::cout << "Initialized GL: Version " << glewGetString(GLEW_VERSION) << std::endl;
 
-    // Allows OpenGL to draw objects appropriately on top of one another
     glClearColor(0, 0, 0, 1);
     glEnable(GL_DEPTH_TEST);
-    // Tells OpenGL to only draw the front face
     glEnable(GL_CULL_FACE);
-    // Tells OpenGL how big the screen is
     glViewport(0, 0, size().width() * m_devicePixelRatio, size().height() * m_devicePixelRatio);
 
-    // Students: anything requiring OpenGL calls when the program starts should be done here
+    shaderProgram = ShaderLoader::createShaderProgram(":/resources/shaders/quad.vert", ":/resources/shaders/grayscale.frag");
 
-    m_shader = ShaderLoader::createShaderProgram(":/resources/shaders/default.vert", ":/resources/shaders/default.frag");
-    m_texture_shader = ShaderLoader::createShaderProgram(":/resources/shaders/quad.vert", ":/resources/shaders/grayscale.frag");
+    float vertices[] = {
+        // Positions
+        -1.0f, -1.0f, 0.0f,
+        1.0f, -1.0f, 0.0f,
+        1.0f,  1.0f, 0.0f,
+        -1.0f,  1.0f, 0.0f
+    };
 
-    glActiveTexture(GL_TEXTURE0);
+    unsigned int indices[] = {
+        0, 1, 2,
+        0, 2, 3
+    };
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
 
-    glUseProgram(m_texture_shader);
-    glUniform1i(glGetUniformLocation(m_texture_shader, "txture"), 0);
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    // Set up uniforms
+    glUseProgram(shaderProgram);
+    resolutionLoc = glGetUniformLocation(shaderProgram, "iResolution");
+    timeLoc = glGetUniformLocation(shaderProgram, "iTime");
+    glUniform2f(resolutionLoc, 800.0f, 600.0f);
     glUseProgram(0);
 
 
 
-
-    std::vector<GLfloat> fullscreen_quad_data = {
-        -1.0f,  1.0f, 0.0f,   0.0f, 1.0f,  // Top-left corner
-        -1.0f, -1.0f, 0.0f,   0.0f, 0.0f,  // Bottom-left corner
-        1.0f,  1.0f, 0.0f,   1.0f, 1.0f,  // Top-right corner
-        -1.0f, -1.0f, 0.0f,   0.0f, 0.0f,  // Bottom-left corner
-        1.0f, -1.0f, 0.0f,   1.0f, 0.0f,  // Bottom-right corner
-        1.0f,  1.0f, 0.0f,   1.0f, 1.0f   // Top-right corner
-    };
-
-
-    // Generate and bind a VBO and a VAO for a fullscreen quad
-    glGenBuffers(1, &m_fullscreen_vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, m_fullscreen_vbo);
-    glBufferData(GL_ARRAY_BUFFER, fullscreen_quad_data.size()*sizeof(GLfloat), fullscreen_quad_data.data(), GL_STATIC_DRAW);
-    glGenVertexArrays(1, &m_fullscreen_vao);
-    glBindVertexArray(m_fullscreen_vao);
-
-
-
-    // Task 14: modify the code below to add a second attribute to the vertex attribute array
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)0);
-
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
-
-    // Unbind the fullscreen quad's VBO and VAO
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-
-    makeFBO();
 }
 
-void Realtime::makeFBO()
-{
-    this->makeCurrent();
-    glGenTextures(1, &m_fbo_texture);
-    glBindTexture(GL_TEXTURE_2D, m_fbo_texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_fbo_width, m_fbo_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glBindTexture(GL_TEXTURE_2D, 0);
 
-    glGenRenderbuffers(1, &m_fbo_renderbuffer);
-    glBindRenderbuffer(GL_RENDERBUFFER, m_fbo_renderbuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, m_fbo_width, m_fbo_height);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-    glGenFramebuffers(1, &m_fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_fbo_texture, 0);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_fbo_renderbuffer);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, m_defaultFBO);
-
-}
 
 void Realtime::paintGL()
 {
-    this->makeCurrent();
-    paint(this, data, m_shader, m_model, m_view, m_proj, vertices, settings,m_texture_shader,m_fbo,m_fbo_texture, m_fullscreen_vao,m_fbo_width,m_fbo_height,m_defaultFBO);
+    glUseProgram(shaderProgram);
+    time += 0.01f;
+    glClear(GL_COLOR_BUFFER_BIT);
+
+
+    // Set uniform values
+    glUniform1f(timeLoc,time);
+
+    // Render the quad
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glUseProgram(0);
 }
 
 void Realtime::resizeGL(int w, int h) {
     // Tells OpenGL how big the screen is
     m_screen_width = size().width() * m_devicePixelRatio;
     m_screen_height = size().height() * m_devicePixelRatio;
-    m_fbo_width = m_screen_width;
-    m_fbo_height = m_screen_height;
-    // Task 34: Regenerate your FBOs
-    glDeleteTextures(1, &m_fbo_texture);
-    glDeleteRenderbuffers(1, &m_fbo_renderbuffer);
-    glDeleteFramebuffers(1, &m_fbo);
-    makeFBO();
+
     glViewport(0, 0, m_screen_width, m_screen_height);
     // Students: anything requiring OpenGL calls when the program starts should be done here
 }
@@ -186,89 +153,21 @@ void Realtime::clearBuffers()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClearColor(GLfloat(0),GLfloat(0),GLfloat(0),GLfloat(0));
-    // Clear VAOs
-    glDeleteVertexArrays(1, &vertices.cu_vao);
-    glDeleteVertexArrays(1, &vertices.s_vao);
-    glDeleteVertexArrays(1, &vertices.cy_vao);
-    glDeleteVertexArrays(1, &vertices.co_vao);
 
-    // Clear VBOs
-    glDeleteBuffers(1, &vertices.cu_vbo);
-    glDeleteBuffers(1, &vertices.s_vbo);
-    glDeleteBuffers(1, &vertices.cy_vbo);
-    glDeleteBuffers(1, &vertices.co_vbo);
-
-    // Clear vertex data containers
-    vertices.cube.clear();
-    vertices.sphere.clear();
-    vertices.cylinder.clear();
-    vertices.cone.clear();
-
-    // Reset VAO and VBO handles
-    vertices.cu_vao = 0;
-    vertices.s_vao = 0;
-    vertices.cy_vao = 0;
-    vertices.co_vao = 0;
-    vertices.cu_vbo = 0;
-    vertices.s_vbo = 0;
-    vertices.cy_vbo = 0;
-    vertices.co_vbo = 0;
 }
 
 void Realtime::sceneChanged()
 {
-    clearBuffers();
+    //clearBuffers();
 
-    SceneParser::parse(settings.sceneFilePath, data);
-    vertices.instance = this;
-    figureVertices(data,vertices);
-    calcMatrices(data,m_view,m_proj,width(),height());
 
-    if(settings.extraCredit2)
-    {
-        update();
-        return;
-    }
-
-    int param_count = data.shapes.size();
-    int baseParam1 = settings.shapeParameter1;
-    int baseParam2 = settings.shapeParameter2;
-
-    if (settings.extraCredit1)
-        extraCredits1(baseParam1,baseParam2,param_count);
-
-    scan_primitives(baseParam1, baseParam2, vertices);
     update();
 }
 
 void Realtime::settingsChanged()
 {
-    if(settings.sceneFilePath!="")
-    {
-        clearBuffers();
-        vertices.instance = this;
-        figureVertices(data,vertices);
-        calcMatrices(data,m_view,m_proj,width(),height());
 
-        if(settings.extraCredit2)
-        {
-            update();
-            return;
-        }
-
-        int param_count = data.shapes.size();
-
-
-        int baseParam1 = settings.shapeParameter1;
-        int baseParam2 = settings.shapeParameter2;
-
-        if (settings.extraCredit1)
-            extraCredits1(baseParam1,baseParam2,param_count);
-
-
-        scan_primitives(baseParam1, baseParam2, vertices);
-    }
-
+    //clearBuffers();
     update(); // asks for a PaintGL() call to occur
 }
 
@@ -304,7 +203,7 @@ void Realtime::mouseMoveEvent(QMouseEvent *event) {
         m_prev_mouse_pos = glm::vec2(posX, posY);
 
         // Use deltaX and deltaY here to rotate
-        calcMatrices(data,m_view,m_proj,width(),height(),deltaX,deltaY);
+        // calcMatrices(data,m_view,m_proj,width(),height(),deltaX,deltaY);
 
         update(); // asks for a PaintGL() call to occur
     }
@@ -316,7 +215,7 @@ void Realtime::timerEvent(QTimerEvent *event) {
     m_elapsedTimer.restart();
 
     // Use deltaTime and m_keyMap here to move around
-    calcMatrices(data,m_view,m_proj,width(),height(),m_keyMap,deltaTime);
+    //calcMatrices(data,m_view,m_proj,width(),height(),m_keyMap,deltaTime);
 
     update(); // asks for a PaintGL() call to occur
 }

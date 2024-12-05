@@ -12,32 +12,6 @@
 #include <QOpenGLWidget>
 #include <QTime>
 #include <QTimer>
-#include "utils/sceneparser.h"
-
-
-struct vertexCollection
-{
-    std::vector<float> sphere;
-    std::vector<float> cube;
-    std::vector<float> cylinder;
-    std::vector<float> cone;
-
-    GLuint s_vbo=0;
-    GLuint s_vao=0;
-
-    GLuint cu_vbo=0;
-    GLuint cu_vao=0;
-
-    GLuint cy_vbo=0;
-    GLuint cy_vao=0;
-
-    GLuint co_vbo=0;
-    GLuint co_vao=0;
-
-    int status[4] = {0,0,0,0}; // Sphere, Cube, Cylinder , Cone
-    // new
-    QOpenGLWidget* instance;
-};
 
 
 
@@ -53,7 +27,7 @@ public:
 
 
 
-    RenderData data;
+
     GLuint m_shader;
 
 
@@ -63,27 +37,21 @@ public:
     glm::mat4 m_proj  = glm::mat4(1);
 
 
-    vertexCollection vertices;
 
-    GLuint m_defaultFBO;
-    int m_fbo_width;
-    int m_fbo_height;
     int m_screen_width;
     int m_screen_height;
 
-    GLuint m_texture_shader;
-    GLuint m_fullscreen_vbo;
-    GLuint m_fullscreen_vao;
-    QImage m_image;
-    GLuint m_kitten_texture;
-    GLuint m_fbo;
-    GLuint m_fbo_texture;
-    GLuint m_fbo_renderbuffer;
-
-    void makeFBO();
 
 
+    GLuint VAO;
+    GLuint VBO;
+    GLuint EBO;
 
+    GLuint shaderProgram;
+
+    int resolutionLoc;
+    int timeLoc;
+    float time = 0.f;
 
 public slots:
     void tick(QTimerEvent* event);                      // Called once per tick of m_timer
