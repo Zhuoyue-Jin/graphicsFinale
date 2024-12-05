@@ -118,8 +118,6 @@ void Realtime::initializeGL() {
     glUniform2f(resolutionLoc, 800.0f, 600.0f);
     glUseProgram(0);
 
-
-
 }
 
 

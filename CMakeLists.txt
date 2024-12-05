@@ -45,6 +45,7 @@ add_executable(${PROJECT_NAME}
     src/shaderloader.h
 
     src/tiny_obj_loader.h
+    src/utils/camera.h
 
 )
 
