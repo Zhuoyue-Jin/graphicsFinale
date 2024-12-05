@@ -1,0 +1,4 @@
+set(__QT_DEPLOY_TARGET_Meshmerized_FILE /Users/aman/Developer/cloudsRender/build/build-cloudsRender-Qt_6_8_0_for_macOS-Debug/Meshmerized)
+set(__QT_DEPLOY_TARGET_Meshmerized_TYPE EXECUTABLE)
+set(__QT_DEPLOY_TARGET_StaticGLEW_FILE /Users/aman/Developer/cloudsRender/build/build-cloudsRender-Qt_6_8_0_for_macOS-Debug/libStaticGLEW.a)
+set(__QT_DEPLOY_TARGET_StaticGLEW_TYPE STATIC_LIBRARY)
