@@ -1,2 +1,5 @@
 iteration_images/
 .vscode/
+.DS_Store
+CMakeLists.txt.user
+build/
