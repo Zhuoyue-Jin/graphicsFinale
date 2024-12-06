@@ -80,66 +80,79 @@ void Realtime::initializeGL() {
 
     calMatrices(width,height, m_view, m_proj,pos,look,up);
 
-    // Sample Cloud Code
-    //shaderProgram = ShaderLoader::createShaderProgram(":/resources/shaders/clouds.vert", ":/resources/shaders/clouds.frag");
+    shaderProgram = ShaderLoader::createShaderProgram(":/resources/shaders/raymarching.vert", ":/resources/shaders/raymarching.frag");
 
-    // float vertices[] = {
-    //     // Positions
-    //     -1.0f, -1.0f, 0.0f,
-    //     1.0f, -1.0f, 0.0f,
-    //     1.0f,  1.0f, 0.0f,
-    //     -1.0f,  1.0f, 0.0f
-    // };
 
-    // unsigned int indices[] = {
-    //     0, 1, 2,
-    //     0, 2, 3
-    // };
+    float vertices[] = {
+        // Positions       // UV Coordinates
+        -1.0f, -1.0f, 0.0f,  0.0f, 0.0f, // Bottom-left
+        1.0f, -1.0f, 0.0f,  1.0f, 0.0f, // Bottom-right
+        1.0f,  1.0f, 0.0f,  1.0f, 1.0f, // Top-right
+        -1.0f,  1.0f, 0.0f,  0.0f, 1.0f  // Top-left
+    };
 
-    // glGenVertexArrays(1, &VAO);
-    // glGenBuffers(1, &VBO);
-    // glGenBuffers(1, &EBO);
+    unsigned int indices[] = {
+        0, 1, 2, // First triangle
+        0, 2, 3  // Second triangle
+    };
 
-    // glBindVertexArray(VAO);
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
 
-    // glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    // Bind the Vertex Array Object
+    glBindVertexArray(VAO);
 
-    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    // glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    // Bind and fill the Vertex Buffer Object
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    // glEnableVertexAttribArray(0);
+    // Bind and fill the Element Buffer Object
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    // glBindBuffer(GL_ARRAY_BUFFER, 0);
-    // glBindVertexArray(0);
+    // Enable and configure the position attribute (location = 0)
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
 
-    // // Set up uniforms
-    // glUseProgram(shaderProgram);
-    // resolutionLoc = glGetUniformLocation(shaderProgram, "iResolution");
-    // timeLoc = glGetUniformLocation(shaderProgram, "iTime");
-    // glUniform2f(resolutionLoc, 800.0f, 600.0f);
-    // glUseProgram(0);
+    // // Enable and configure the UV attribute (location = 1)
+    // glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    // glEnableVertexAttribArray(1);
+
+    // Unbind the VAO (optional)
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 
 }
-
 
 
 void Realtime::paintGL()
 {
-    // glUseProgram(shaderProgram);
-    // time += 0.01f;
-    // glClear(GL_COLOR_BUFFER_BIT);
+    // Clear the color and depth buffers
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // // Set uniform values
-    // glUniform1f(timeLoc,time);
+    // Use the shader program
+    glUseProgram(shaderProgram);
 
-    // // Render the quad
-    // glBindVertexArray(VAO);
-    // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    // glUseProgram(0);
+    // Pass uniform values to the shader program
+
+
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(m_view));
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(m_proj));
+    glUniform3f(glGetUniformLocation(shaderProgram, "cameraPos"), pos.x, pos.y, pos.z);
+
+    // Pass sphere properties as uniforms
+    glUniform3f(glGetUniformLocation(shaderProgram, "spherePos"), 0.f, 0.f, -5.f);
+    glUniform1f(glGetUniformLocation(shaderProgram, "sphereRadius"), 2.f);
+
+    // Bind the VAO and draw the full-screen quad
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
+
+    // Unbind the shader program
+    glUseProgram(0);
 }
-
 void Realtime::resizeGL(int w, int h) {
     // Tells OpenGL how big the screen is
     m_screen_width = size().width() * m_devicePixelRatio;

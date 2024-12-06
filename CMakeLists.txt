@@ -46,6 +46,9 @@ add_executable(${PROJECT_NAME}
 
     src/tiny_obj_loader.h
     src/utils/camera.h
+    src/utils/Perlin.h
+    resources/shaders/raymarching.vert
+    resources/shaders/raymarching.frag
 
 )
 
@@ -74,6 +77,8 @@ qt6_add_resources(${PROJECT_NAME} "Resources"
     FILES
         resources/shaders/clouds.frag
         resources/shaders/clouds.vert
+        resources/shaders/raymarching.frag
+        resources/shaders/raymarching.vert
 )
 
 # GLEW: this provides support for Windows (including 64-bit)
