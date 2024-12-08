@@ -29,8 +29,8 @@ public:
 
     // Camera parameters
     glm::vec4 pos = glm::vec4(0.f,0.f,0.f,1.f);
-    glm::vec4 look = glm::vec4(0.f,0.f,-1.f,0.f);
-    glm::vec4 up = glm::vec4(0.f,1.f,0.f,0.f);
+    glm::vec4 look = glm::normalize(glm::vec4(0.f,0.f,-1.f,0.f));
+    glm::vec4 up = glm::normalize(glm::vec4(0.f,1.f,0.f,0.f));
     glm::mat4 m_model = glm::mat4(1);
     glm::mat4 m_view  = glm::mat4(1);
     glm::mat4 m_proj  = glm::mat4(1);

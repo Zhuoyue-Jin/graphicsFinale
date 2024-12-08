@@ -17,7 +17,7 @@ void calMatrices( int width,
 
 
     float aspectRatio = static_cast<float>(width) / height;
-    float theta_h = 30.f;
+    float theta_h = 45.f;
     float near = 0.1f;
     float far = 100.f;
 
