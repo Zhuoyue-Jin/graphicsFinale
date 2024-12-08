@@ -1,5 +1,8 @@
 #include "mainwindow.h"
+#include<gl/glut.h>
+#include<math.h>
 
+#include <windows.h>
 #include <QApplication>
 #include <QScreen>
 #include <iostream>
